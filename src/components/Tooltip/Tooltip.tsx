@@ -6,9 +6,13 @@ interface TooltipChildProps {
   onMouseLeave: React.MouseEventHandler<HTMLElement>;
 }
 
+type TooltipChildPropGetter = <Props extends object>(
+  baseProps: Props,
+) => Props & TooltipChildProps;
+
 interface TooltipProps {
   text: string;
-  children: (props: TooltipChildProps) => React.ReactElement;
+  children: (props: TooltipChildPropGetter) => React.ReactElement;
 }
 
 export function Tooltip({ children, text }: TooltipProps): JSX.Element {
@@ -32,6 +36,24 @@ export function Tooltip({ children, text }: TooltipProps): JSX.Element {
     });
   }, [anchorEl]);
 
+  function propsGetter(baseProps: Record<string, unknown>) {
+    const { onMouseEnter, onMouseLeave } = baseProps;
+
+    return {
+      ...baseProps,
+      onMouseLeave: (e: React.MouseEvent<HTMLElement>) => {
+        if (typeof onMouseEnter === 'function') onMouseEnter(e);
+
+        setAnchorEl(null);
+      },
+      onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
+        if (typeof onMouseLeave === 'function') onMouseLeave(e);
+
+        setAnchorEl(e.currentTarget);
+      },
+    };
+  }
+
   return (
     <>
       {anchorEl && (
@@ -48,12 +70,7 @@ export function Tooltip({ children, text }: TooltipProps): JSX.Element {
           </div>
         </Portal>
       )}
-      {children({
-        onMouseLeave: () => setAnchorEl(null),
-        onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
-          setAnchorEl(e.currentTarget);
-        },
-      })}
+      {children(propsGetter as never)}
     </>
   );
 }

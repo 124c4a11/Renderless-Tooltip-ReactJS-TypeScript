@@ -4,14 +4,11 @@ function App() {
   return (
     <div className="container">
       <Tooltip text="delete">
-        {(props) => (
+        {(propsGetter) => (
           <button
-            onMouseEnter={(e) => {
-              console.log('enter mouse');
-
-              props.onMouseEnter(e);
-            }}
-            onMouseLeave={props.onMouseLeave}
+            {...propsGetter({
+              onMouseEnter: (e) => console.log('mouse enter'),
+            })}
           >
             X
           </button>
